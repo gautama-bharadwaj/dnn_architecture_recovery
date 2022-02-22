@@ -15,5 +15,5 @@ pip install -r requirements.txt
 In order to run the module, run
 
 ```bash
-python3 wrapper -m=existing_model_name
+python3 wrapper.py -m=existing_model_name
 ```
