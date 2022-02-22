@@ -17,3 +17,13 @@ In order to run the module, run
 ```bash
 python3 wrapper.py -m=existing_model_name
 ```
+Example:
+```bash
+python3 wrapper.py -m=densenet121
+
+python3 wrapper.py -m=densenet169
+
+python3 wrapper.py -m=densenet201
+
+python3 wrapper.py -m=inception_resnet
+```
