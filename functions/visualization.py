@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import csv
+from scipy.signal import savgol_filter
 
 def graph_plotting(file_name):
     time = []
@@ -27,6 +28,10 @@ def graph_plotting(file_name):
     # color = 'tab:red'
     # ax1.set_xlabel('Time')
     # ax1.set_ylabel()
+    if (len(branches)%2 == 0):
+        window = len(branches) - 1
+    else:
+        window = len(branches)
     plt.plot(time, branches, label='branches')
     plt.plot(time, cache_misses, label='cache misses')
     plt.plot(time, cache_reference, label='cache reference')

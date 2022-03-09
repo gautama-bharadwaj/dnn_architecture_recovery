@@ -60,21 +60,24 @@ class Parser:
 
 def perf_measurement(file_path):
     print("Perf called: \n")
-    subprocess.call("perf stat -e cycles,branches,instructions,cache-references,cache-misses,bus-cycles -p " +
+    subprocess.call("perf stat -e cycles,branches,instructions,cache-references,cache-misses,bus-cycles,branch-loads,iTLB-load-misses,dTLB-load-misses -p " +
                     str(os.getpid())+" -I 10 --output raw_output/"+file_path+".txt &", shell=True)
     getattr(sys.modules[__name__], file_path).run_model()
 
+def repeated_runs(keyword_args, n):
+    for i in range(0, n):
+        file = keyword_args['model']+".py"
+        if not os.path.exists("known_dnn_models/"+file):
+            print("The model "+file+" does not exist. Please enter the right argument")
+            exit()
+        p = Process(target=perf_measurement, args=(keyword_args['model'],))
+        p.start()
+        p.join()
+        format_data.write_to_csv(keyword_args['model']+"-"+str(i))
 
 if __name__ == '__main__':
     keyword_args = dict(Parser().get_kwargs())
-    file = keyword_args['model']+".py"
-    if not os.path.exists("known_dnn_models/"+file):
-        print("The model "+file+" does not exist. Please enter the right argument")
-        exit()
-    p = Process(target=perf_measurement, args=(keyword_args['model'],))
-    p.start()
-    p.join()
-    format_data.write_to_csv(keyword_args['model'])
-    visualization.graph_plotting('output/'+keyword_args['model']+'.csv')
+    repeated_runs(keyword_args, 10)
+    # visualization.graph_plotting('output/'+keyword_args['model']+'.csv')
 
 
