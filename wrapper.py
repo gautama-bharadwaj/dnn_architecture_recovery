@@ -77,7 +77,7 @@ def repeated_runs(keyword_args, n):
 
 if __name__ == '__main__':
     keyword_args = dict(Parser().get_kwargs())
-    repeated_runs(keyword_args, 10)
+    repeated_runs(keyword_args, 50)
     # visualization.graph_plotting('output/'+keyword_args['model']+'.csv')
 
 
