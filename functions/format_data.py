@@ -25,11 +25,12 @@ def write_to_csv(filename):
         if (row['event'] not in csv_header):
             csv_header.append(row['event'])
             dict_keys.append(row['event'])
-        if ('label' not in csv_header):
-            csv_header.append('label')
-            dict_keys.append('label')
+        # if ('label' not in csv_header):
+        #     csv_header.append('label')
+        #     dict_keys.append('label')
         data_dict[row['time']][row['event']] = int(row['count'].replace(',',''))
-        data_dict[row['time']]['label'] = file_name
+        # data_dict[row['time']]['label'] = file_name
+        lines = index
     writer.writerow(csv_header)
     for key in data_dict.keys():
         csv_row = []
@@ -37,3 +38,4 @@ def write_to_csv(filename):
         for sub_key in dict_keys:
             csv_row.append(data_dict[key][sub_key])
         writer.writerow(csv_row)
+    return len(data_dict.keys())+1

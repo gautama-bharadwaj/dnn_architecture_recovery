@@ -15,8 +15,6 @@ _iter = 1
 def run_model():
     # load the model
     model = MobileNetV2(alpha=1.0)
-    print (model.summary())
-    exit()
     # load an image from file
     image = load_img('known_dnn_models/mug.jpg', target_size=(224, 224))
     # convert the image pixels to a numpy array
@@ -28,7 +26,7 @@ def run_model():
 
     # predict the probability across all output classes
     for i in range(_iter):
-        input('{} iteration, press any key to perform...'.format(str(i)))
+        # input('{} iteration, press any key to perform...'.format(str(i)))
         yhat = model.predict(image)
 
     # return if not iter
