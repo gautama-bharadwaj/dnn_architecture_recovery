@@ -10,6 +10,13 @@ from datetime import date
 import csv
 
 
+def validate_type(arg_str):
+    if arg_str == "aggregate" or arg_str == "timeseries":
+        return arg_str
+    else:
+        raise argparse.ArgumentTypeError(
+            f"Given [{arg_str}] argument is not valid! Expected 'aggregate' or 'timeseries"
+        )
 class DefaultParser(argparse.ArgumentParser):
     def error(self, message):
         sys.stderr.write("error: {}\n".format(message))
@@ -44,6 +51,9 @@ class Parser:
         mandatory_args.add_argument(
             "-i", "--iterations", type=int, required=True, help="Enter the number of iterations"
         )
+        mandatory_args.add_argument(
+            "-d", "--data", type=validate_type, required=True, help="Enter the type of data (aggregate or timeseries)"
+        )
         optional_args.add_argument(
             "-v", "--visualize", type=bool, required=False, help="Visualize the last executed model"
         )
@@ -65,46 +75,57 @@ class Parser:
         return dict(
             model=args.model,
             iterations=args.iterations,
+            data = args.data,
             visualize = args.visualize
         ).items()
 
-def perf_measurement(file_path):
+def perf_measurement(file_path, data):
     print("Perf called: \n")
-    subprocess.call("perf stat -e cycles,branches,instructions,cache-references,cache-misses,bus-cycles,branch-loads,iTLB-load-misses,dTLB-load-misses -p " +
-                    str(os.getpid())+" -I 10 --output raw_output/"+file_path+".txt &", shell=True)
-    getattr(sys.modules[__name__], file_path).run_model()
+    if (data == "aggregate"):
+        subprocess.call("perf stat -e cycles,branches,instructions,cache-references,cache-misses,bus-cycles,branch-loads,iTLB-load-misses,dTLB-load-misses -p " +
+                        str(os.getpid())+" --output raw_output/test.txt &", shell=True)
+        getattr(sys.modules[__name__], file_path).run_model()
+    else:
+        subprocess.call("perf stat -e cycles,branches,instructions,cache-references,cache-misses,bus-cycles,branch-loads,iTLB-load-misses,dTLB-load-misses -p " +
+                        str(os.getpid())+" -I 10 --output raw_output/"+file_path+".txt &", shell=True)
+        getattr(sys.modules[__name__], file_path).run_model()
 
-def repeated_runs(keyword_args, n, visualize):
+def repeated_runs(keyword_args, n, visualize, data):
     max_lines = 0
     for i in range(0, n):
         file = keyword_args['model']+".py"
         if not os.path.exists("known_dnn_models/"+file):
             print("The model "+file+" does not exist. Please enter the right argument")
             exit()
-        p = Process(target=perf_measurement, args=(keyword_args['model'],))
+        p = Process(target=perf_measurement, args=(keyword_args['model'],data,))
         p.start()
         p.join()
-        line_count = format_data.write_to_csv(keyword_args['model']+"-"+str(i))
-        if (line_count>max_lines):
-            max_lines = line_count
+        if (data == "timeseries"):
+            line_count = format_data.time_series_write_to_csv(keyword_args['model']+"-"+str(i))
+        elif (data == "aggregate"):
+            format_data.aggregate_write_to_csv(keyword_args['model']+"-"+str(i))
 
-    if (visualize):
-        visualization.graph_plotting('output/'+keyword_args['model']+'-'+str(i)+'.csv')
-    for i in range(0, n):
-        lis = list(csv.reader(open('output/'+keyword_args['model']+'-'+str(i)+'.csv')))
-        final_time_stamp = lis[-1][0]
-        cols = len(lis[-1])
-        row_count = len(lis)
-        zero_append_list = [0]*cols
-        if (row_count < max_lines):
-            csv_file = open('output/'+keyword_args['model']+'-'+str(i)+'.csv', 'a', encoding='UTF8')
-            writer = csv.writer(csv_file)
-            extra_row = 1
-            for i in range(row_count, max_lines):
-                time_inc = str(float(final_time_stamp) + 0.01*extra_row)
-                zero_append_list[0] = time_inc
-                writer.writerow(zero_append_list)
-                extra_row += 1
+    # FOR APPENDING ZEROES & VISUALIZING
+    #     if (line_count>max_lines):
+    #         max_lines = line_count
+
+    # if (visualize):
+    #     visualization.graph_plotting('output/'+keyword_args['model']+'-'+str(i)+'.csv')
+    # for i in range(0, n):
+    #     lis = list(csv.reader(open('output/'+keyword_args['model']+'-'+str(i)+'.csv')))
+    #     final_time_stamp = lis[-1][0]
+    #     cols = len(lis[-1])
+    #     row_count = len(lis)
+    #     zero_append_list = [0]*cols
+    #     if (row_count < max_lines):
+    #         csv_file = open('output/'+keyword_args['model']+'-'+str(i)+'.csv', 'a', encoding='UTF8')
+    #         writer = csv.writer(csv_file)
+    #         extra_row = 1
+    #         for i in range(row_count, max_lines):
+    #             time_inc = str(float(final_time_stamp) + 0.01*extra_row)
+    #             zero_append_list[0] = time_inc
+    #             writer.writerow(zero_append_list)
+    #             extra_row += 1
 
 
 # def append_zeros(keyword_args, n):
@@ -112,6 +133,6 @@ def repeated_runs(keyword_args, n, visualize):
 
 if __name__ == '__main__':
     keyword_args = dict(Parser().get_kwargs())
-    repeated_runs(keyword_args, keyword_args['iterations'], keyword_args['visualize'])
+    repeated_runs(keyword_args, keyword_args['iterations'], keyword_args['visualize'], keyword_args['data'])
 
 
